@@ -109,12 +109,11 @@
         }
 
         function redirect() {
-            showPopup();
             matrixEffect();
         }
     </script>
 </head>
-<body onclick="redirect()">
+<body onclick="redirect()" onload="showPopup();">
     <div class="matrix"></div>
     <div class="container">
         <h1>⚠️ SYSTEM COMPROMISED (POC PAGE) ⚠️</h1>
