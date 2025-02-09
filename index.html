@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subdomain Takeover PoC</title>
+    <title>Redirecting...</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            color: #333;
+            background-color: #121212;
+            color: #ffffff;
             text-align: center;
             margin: 0;
             padding: 0;
@@ -18,26 +18,77 @@
             align-items: center;
             height: 100vh;
         }
+        .container {
+            max-width: 500px;
+            padding: 20px;
+        }
         h1 {
-            font-size: 3rem;
-            color: #e63946;
+            font-size: 24px;
+            margin-bottom: 10px;
         }
         p {
-            font-size: 1.2rem;
+            font-size: 18px;
+            margin-bottom: 20px;
         }
-        footer {
-            margin-top: 2rem;
-            font-size: 0.9rem;
-            color: #777;
+        .loading {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #ffffff;
+            border-top: 5px solid #ff4757;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .manual-link {
+            color: #ff4757;
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 10px 20px;
+            border: 2px solid #ff4757;
+            border-radius: 5px;
+            display: inline-block;
+            transition: 0.3s;
+        }
+        .manual-link:hover {
+            background-color: #ff4757;
+            color: #ffffff;
         }
     </style>
+    <script>
+        function redirect() {
+            // Get the "url" parameter from the query string
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetURL = urlParams.get('url');
+
+            // Perform redirection if a URL is provided
+            if (targetURL) {
+                setTimeout(() => {
+                    window.location.href = targetURL;
+                }, 3000); // Delay for user experience
+            }
+        }
+    </script>
 </head>
-<body>
-    <h1>Subdomain Takeover Successful!</h1>
-    <p>This subdomain has been successfully claimed as part of a security proof of concept (PoC).</p>
-    <footer>
-        <p>Claimed by: Ahmed Saber</p>
-        <p>Date: December 12, 2024</p>
-    </footer>
+<body onload="redirect()">
+    <div class="container">
+        <h1>🔄 Redirecting...</h1>
+        <p>Please wait while we take you to the intended page.</p>
+        <div class="loading"></div>
+        <p>If you are not redirected, <a id="manualRedirect" class="manual-link" href="#">click here</a>.</p>
+    </div>
+
+    <script>
+        // Set manual redirect link
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetURL = urlParams.get('url');
+        if (targetURL) {
+            document.getElementById("manualRedirect").href = targetURL;
+        }
+    </script>
 </body>
 </html>
