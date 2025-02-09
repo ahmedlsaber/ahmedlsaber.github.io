@@ -3,92 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redirecting...</title>
+    <title>Hacked! Open Redirect PoC</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #121212;
-            color: #ffffff;
+            background-color: black;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
             text-align: center;
             margin: 0;
             padding: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
         }
         .container {
-            max-width: 500px;
+            margin-top: 10%;
             padding: 20px;
         }
         h1 {
-            font-size: 24px;
-            margin-bottom: 10px;
+            font-size: 36px;
+            text-transform: uppercase;
+            animation: glitch 1s infinite alternate;
+        }
+        @keyframes glitch {
+            0% { text-shadow: 2px 2px #ff0000, -2px -2px #00ff00; }
+            100% { text-shadow: -2px -2px #ff0000, 2px 2px #00ff00; }
         }
         p {
             font-size: 18px;
-            margin-bottom: 20px;
         }
-        .loading {
-            width: 50px;
-            height: 50px;
-            border: 5px solid #ffffff;
-            border-top: 5px solid #ff4757;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
+        .alert {
+            color: red;
+            font-weight: bold;
+            font-size: 22px;
+            margin-top: 20px;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .matrix {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            overflow: hidden;
+            z-index: -1;
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
         }
         .manual-link {
-            color: #ff4757;
+            color: red;
             text-decoration: none;
             font-size: 18px;
             font-weight: bold;
             padding: 10px 20px;
-            border: 2px solid #ff4757;
+            border: 2px solid red;
             border-radius: 5px;
             display: inline-block;
             transition: 0.3s;
+            margin-top: 20px;
         }
         .manual-link:hover {
-            background-color: #ff4757;
-            color: #ffffff;
+            background-color: red;
+            color: white;
         }
     </style>
     <script>
-        function redirect() {
-            // Get the "url" parameter from the query string
-            const urlParams = new URLSearchParams(window.location.search);
-            const targetURL = urlParams.get('url');
+        function matrixEffect() {
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            document.body.appendChild(canvas);
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
 
-            // Perform redirection if a URL is provided
-            if (targetURL) {
-                setTimeout(() => {
-                    window.location.href = targetURL;
-                }, 3000); // Delay for user experience
+            let letters = "0101011100101100110100101011001";
+            letters = letters.split("");
+            let fontSize = 14;
+            let columns = canvas.width / fontSize;
+            let drops = [];
+            for (let i = 0; i < columns; i++) {
+                drops[i] = Math.floor(Math.random() * canvas.height);
             }
+
+            function draw() {
+                ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = "#0f0";
+                ctx.font = fontSize + "px monospace";
+
+                for (let i = 0; i < drops.length; i++) {
+                    let text = letters[Math.floor(Math.random() * letters.length)];
+                    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.95) {
+                        drops[i] = 0;
+                    }
+                    drops[i]++;
+                }
+            }
+            setInterval(draw, 33);
+        }
+
+        function showPopup() {
+            alert("🚨 WARNING: You have been redirected due to an Open Redirect Vulnerability! 🚨");
+        }
+
+        function redirect() {
+            showPopup();
+            matrixEffect();
         }
     </script>
 </head>
 <body onload="redirect()">
+    <div class="matrix"></div>
     <div class="container">
-        <h1>🔄 Redirecting...</h1>
-        <p>Please wait while we take you to the intended page.</p>
-        <div class="loading"></div>
-        <p>If you are not redirected, <a id="manualRedirect" class="manual-link" href="#">click here</a>.</p>
+        <h1>⚠️ SYSTEM COMPROMISED ⚠️</h1>
+        <p>Congratulations! You have successfully exploited an open redirect vulnerability.</p>
+        <p class="alert">This is a security risk that could be used for phishing or malicious attacks!</p>
+        <p>If this was unintentional, report it immediately.</p>
+        <a href="https://your-report-page.com" class="manual-link">Report This Vulnerability</a>
     </div>
-
-    <script>
-        // Set manual redirect link
-        const urlParams = new URLSearchParams(window.location.search);
-        const targetURL = urlParams.get('url');
-        if (targetURL) {
-            document.getElementById("manualRedirect").href = targetURL;
-        }
-    </script>
 </body>
 </html>
