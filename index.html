@@ -1,334 +1,240 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Art of EMF: A Visual Presentation</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0d1117;
-            color: #e6edf3;
-            overflow: hidden;
-            cursor: pointer;
-        }
-
-        .presentation-container {
-            width: 100vw;
-            height: 100vh;
-            position: relative;
-            perspective: 1500px;
-        }
-
-        .slide {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            transition: transform 1s cubic-bezier(0.76, 0, 0.24, 1), opacity 1s cubic-bezier(0.76, 0, 0.24, 1);
-            opacity: 0;
-            transform-style: preserve-3d;
-            transform: translateZ(-200px) rotateY(45deg);
-            overflow: hidden;
-            background-color: #0d1117;
-        }
-
-        .slide.active {
-            opacity: 1;
-            transform: translateZ(0) rotateY(0deg);
-        }
-        
-        .slide.exit-left {
-            transform: translateZ(-200px) rotateY(-45deg);
-            opacity: 0;
-        }
-
-        .slide.exit-right {
-             transform: translateZ(-200px) rotateY(45deg);
-             opacity: 0;
-        }
-
-        /* Content animation */
-        .anim-item {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .active .anim-item {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .active .anim-item:nth-child(1) { transition-delay: 0.4s; }
-        .active .anim-item:nth-child(2) { transition-delay: 0.55s; }
-        .active .anim-item:nth-child(3) { transition-delay: 0.7s; }
-        .active .anim-item:nth-child(4) { transition-delay: 0.85s; }
-
-        #progress-bar-container {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            z-index: 100;
-        }
-        #progress-bar {
-            height: 4px;
-            transition: width 0.5s ease-out;
-            background: linear-gradient(90deg, rgba(36,163,224,1) 0%, rgba(56,183,244,1) 100%);
-        }
-        
-        /* Image styles with Ken Burns effect */
-        .image-container {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%; 
-            overflow: hidden;
-        }
-        .image-container::after {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(13,17,23,0.5);
-        }
-        .slide-image {
-            width: 100%; height: 100%; object-fit: cover;
-            animation: ken-burns 30s infinite alternate;
-        }
-        @keyframes ken-burns {
-            0% { transform: scale(1.05) translate(0%, -2%); }
-            100% { transform: scale(1.15) translate(-4%, 2%); }
-        }
-
-        .content-container {
-            position: relative;
-            z-index: 1;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pinterest Username-Reuse Demo (Simulated)</title>
+  <style>
+    body{font-family:Inter,ui-sans-serif,system-ui,Arial;margin:24px;background:#f6f8fb;color:#0b1220}
+    h1{font-size:20px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .card{background:white;border-radius:10px;padding:12px;box-shadow:0 6px 18px rgba(11,18,32,0.06)}
+    .embed{border:1px dashed #d6dbe6;padding:10px;border-radius:8px;min-height:100px}
+    .controls{margin-bottom:12px}
+    button{padding:8px 12px;border-radius:8px;border:0;background:#2563eb;color:white;cursor:pointer;margin-right:8px}
+    small.gray{color:#6b7280}
+    pre{background:#0b122028;padding:10px;border-radius:6px;overflow:auto}
+    .muted{color:#6b7280;font-size:13px}
+  </style>
 </head>
 <body>
-    <div id="presentation-container" class="presentation-container">
-        <!-- Slides will be injected here -->
+  <h1>Pinterest Username-Reuse Vulnerability — Interactive Demo (Simulated)</h1>
+  <p class="muted">This is a <strong>local simulation</strong> — it does <em>not</em> call Pinterest. It demonstrates how embeds and API calls which reference usernames can be silently redirected if an old username is re-registered by an attacker.</p>
+
+  <div class="controls">
+    <button id="btn-change">Simulate: User changes username (old &rarr; new)</button>
+    <button id="btn-register">Simulate: Attacker registers old username</button>
+    <button id="btn-reset">Reset demo</button>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h3>1) Widget embed (HTML + pinit.js style)</h3>
+      <div class="embed" id="widget-embed">
+        <!-- This area shows what the official widget would render based on the username in the href -->
+      </div>
+      <p class="muted">HTML snippet used by site (hardcoded):</p>
+      <pre id="widget-snippet">&lt;a data-pin-do="embedUser" href="https://www.pinterest.com/oldusername/"&gt;&lt;/a&gt; &lt;script src="//assets.pinterest.com/js/pinit.js"&gt;&lt;/script&gt;</pre>
     </div>
 
-    <!-- Progress Bar -->
-    <div id="progress-bar-container">
-        <div id="progress-bar" style="width: 0%"></div>
+    <div class="card">
+      <h3>2) "Pidgets" JSON endpoint (simulated)</h3>
+      <div class="embed" id="pidgets-embed"></div>
+      <p class="muted">Example endpoint: <code>/v3/pidgets/users/[username]/pins/</code></p>
+      <p class="muted">Fetched JSON (simulated):</p>
+      <pre id="pidgets-json"></pre>
     </div>
 
-    <script>
-        const slideData = [
-            {
-                type: 'title',
-                title: 'Biological Effects of Electromagnetic Fields',
-                subtitle: 'Deconstructing the Science',
-                author: 'Based on the paper by Z. Sienkiewicz',
-                image: 'https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?q=80&w=2671&auto=format&fit=crop'
-            },
-            {
-                type: 'text_left',
-                title: 'What are Electromagnetic Fields?',
-                points: [
-                    "Invisible areas of energy (radiation) associated with electrical power.",
-                    "Composed of both electric and magnetic fields.",
-                    "Electromagnetic Fields are created through the motion of an electric charge. A static charge creates an electric field, and a moving charge creates a magnetic field.",
-                    "The spectrum spans from low-frequency power lines to high-frequency X-rays."
-                ],
-                image: 'https://static.vecteezy.com/system/resources/previews/030/201/552/non_2x/abstract-multicolored-glowing-bright-magical-energy-lines-on-a-black-background-free-photo.jpg'
-            },
-            {
-    type: 'text_left',
-    title: 'Low-Frequency EMF (< 100 kHz)',
-    points: [
-        "Generated by sources like power lines, household appliances, and electrical wiring.",
-        "They can induce small electric currents in conductive materials or cause charge accumulation in non-conductive materials.",
-        "These fields can interact with the body’s natural electrical systems, causing slight stimulation of nerves and muscles.",
-        "Extremely strong fields may generate minor heating in tissues, though this is rare under everyday exposure levels."
-    ],
-    image: 'https://static.vecteezy.com/system/resources/previews/008/423/333/large_2x/high-voltage-power-supply-and-power-line-with-sunrise-and-tree-background-free-photo.jpg'
-            },
-            {
-                type: 'text_right',
-                title: 'Reproduction & Cancer (Low Freq.)',
-                points: [
-                    "<strong>Reproduction:</strong> Most mammalian studies show no consistent link between EMF and adverse pregnancy outcomes.",
-                    "<strong>Cancer Initiation:</strong> No convincing evidence that low-frequency fields can cause direct genetic damage.",
-                    "<strong>Cancer Promotion:</strong> Experimental evidence is contradictory and does not provide a clear indication of an effect.",
-                    "Low-frequency fields do not have enough energy to ionize atoms or molecules, meaning they cannot directly damage DNA."
-                ],
-                image: 'https://static.vecteezy.com/system/resources/previews/022/911/197/large_2x/3d-rendering-of-human-cell-or-embryonic-stem-cell-red-cancer-cells-red-virus-virus-or-bacteria-cells-human-cancer-cell-3d-illustration-of-t-cells-or-cancer-cells-generate-ai-free-photo.jpg'
-            },
-            {
-                type: 'text_left',
-                title: 'High-Frequency RF (> 100 kHz)',
-                points: [
-                    "Generated by broadcasting antennas, microwave ovens, and mobile communication devices.",
-                    "The main, well-established biological effect is tissue heating.",
-                    "This thermal effect is the basis for current safety guidelines."
-                ],
-                image: 'https://static.vecteezy.com/system/resources/previews/010/381/804/large_2x/black-antenna-communication-satellite-dish-over-sunset-sky-in-cityscape-free-photo.jpg'
-            },
-            {
-                type: 'text_right',
-                title: 'The Thermal Effect',
-                points: [
-                    "Most biological effects are consistent with a tissue temperature rise of 1°C or more.",
-                    "At typical exposure levels from mobile phones, this heating is minimal and well below safety thresholds.",
-                    "Heat-sensitive tissues (eyes, testes) are theoretically most vulnerable, but only at very high exposure levels."
-                ],
-                image: 'https://static.vecteezy.com/system/resources/previews/053/192/670/large_2x/miniature-volcano-eruption-simulation-free-photo.jpg'
-            },
-             {
-                type: 'text_left',
-                title: 'Pulsed Radiation & "Microwave Hearing"',
-                points: [
-                    "Some devices use pulsed signals, which can lead to a phenomenon known as 'microwave hearing'.",
-                    "Users may perceive clicks or buzzes, caused by tiny, rapid heating of tissue that creates a sound wave in the head.",
-                    "It may cause damage to the lens, and involuntary movements."
-                ],
-                image: 'https://static.vecteezy.com/system/resources/previews/006/260/439/large_2x/radiation-hazard-warning-sign-depicted-on-a-concrete-wall-free-photo.jpg'
-            },{
-                type: 'text_right',
-                title: 'The State of Research',
-                points: [
-                    "A vast body of research exists, but it often lacks a coherent strategy.",
-                    "Studies frequently produce inconsistent and contradictory results.",
-                    "<strong>Conclusion:</strong> No adverse health effects have been definitively confirmed from typical, low-level exposure."
-                ],
-                image: 'https://images.unsplash.com/photo-1581093450021-4a7360e9a6b5?q=80&w=2670&auto=format&fit=crop'
-            },
-            {
-                type: 'summary',
-                title: 'The Scientific Consensus',
-                items: [
-                   { title: 'Low Frequency', text: 'Strong fields can cause tingling or nerve stimulation.' },
-                   { title: 'High Frequency', text: 'may lead to tissue heating, which is why safety limits exist.' },
-                   { title: 'Cancer', text: 'No Proven evidence of increased risk.' }
-                ],
-                 image: 'https://static.vecteezy.com/system/resources/previews/065/642/767/large_2x/abstract-colorful-wavy-lines-in-vibrant-hues-against-a-dark-black-background-depicting-energy-and-motion-free-photo.jpg'
-            },
-            {
-                type: 'end',
-                title: 'Thank You',
-                image: 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?q=80&w=2612&auto=format&fit=crop'
-            }
-        ];
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            const container = document.getElementById('presentation-container');
-            const progressBar = document.getElementById('progress-bar');
-            
-            let currentSlide = 0;
-            let slides = [];
+    <div class="card">
+      <h3>3) REST API (v5) for account info (simulated)</h3>
+      <div class="embed" id="rest-embed"></div>
+      <p class="muted">Endpoint example: <code>/v5/user_account?username=[username]</code></p>
+      <pre id="rest-json"></pre>
+    </div>
 
-            function createSlideHTML(data) {
-                const imageContent = `<div class="image-container"><img src="${data.image}" class="slide-image" alt="Presentation background image" onerror="this.style.display='none'"></div>`;
-                let textContentHTML = '';
+    <div class="card">
+      <h3>4) Direct image URL / static assets</h3>
+      <div class="embed" id="image-embed" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start"></div>
+      <p class="muted">Example image URL pattern: <code>i.pinimg.com/originals/.../[image].jpg</code></p>
+    </div>
+  </div>
 
-                switch (data.type) {
-                    case 'title':
-                    case 'end':
-                         textContentHTML = `<div class="content-container justify-center text-center p-8">
-                                    <div>
-                                        <h1 class="text-5xl md:text-7xl font-black text-white anim-item">${data.title || ''}</h1>
-                                        <p class="text-2xl md:text-4xl text-cyan-300 mt-4 anim-item font-light">${data.subtitle || ''}</p>
-                                        <p class="text-lg text-gray-400 mt-8 anim-item">${data.author || ''}</p>
-                                    </div>
-                                </div>`;
-                        break;
-                    case 'text_left':
-                        textContentHTML = `<div class="content-container justify-start text-left">
-                                            <div class="w-full md:w-1/2 p-8 md:p-16">
-                                                <h2 class="text-4xl lg:text-5xl font-bold text-white mb-6 anim-item">${data.title || ''}</h2>
-                                                <ul class="space-y-4 text-lg md:text-xl list-none font-light">
-                                                    ${(data.points || []).map((item, i) => `<li class="anim-item" style="transition-delay: ${0.4 + i*0.15}s"><span class="text-cyan-400 mr-2">&#10003;</span>${item}</li>`).join('')}
-                                                </ul>
-                                            </div>
-                                          </div>`;
-                        break;
-                    case 'text_right':
-                        textContentHTML = `<div class="content-container justify-end text-right">
-                                            <div class="w-full md:w-1/2 p-8 md:p-16">
-                                                <h2 class="text-4xl lg:text-5xl font-bold text-white mb-6 anim-item">${data.title || ''}</h2>
-                                                <ul class="space-y-4 text-lg md:text-xl list-none font-light">
-                                                    ${(data.points || []).map((item, i) => `<li class="anim-item" style="transition-delay: ${0.4 + i*0.15}s"><span class="text-cyan-400 ml-2">&#10003;</span>${item}</li>`).join('')}
-                                                </ul>
-                                            </div>
-                                           </div>`;
-                        break;
-                    case 'summary':
-                        textContentHTML = `<div class="content-container justify-center text-center p-8">
-                                    <div class="w-full max-w-5xl">
-                                        <h2 class="text-4xl md:text-5xl font-bold text-white mb-8 anim-item">${data.title || ''}</h2>
-                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mt-4">
-                                            ${(data.items || []).map((item, i) => `
-                                            <div class="bg-gray-800/50 p-6 rounded-lg border border-gray-700 anim-item backdrop-blur-sm" style="transition-delay: ${0.5 + i*0.2}s">
-                                                <h3 class="font-bold text-xl text-cyan-300 mb-2">${item.title || ''}</h3>
-                                                <p class="text-gray-300 font-light">${item.text || ''}</p>
-                                            </div>`).join('')}
-                                        </div>
-                                    </div>
-                                </div>`;
-                        break;
-                }
-                return `<div class="slide">${imageContent}${textContentHTML}</div>`
-            }
-            
-            function renderSlides() {
-                container.innerHTML = slideData.map((data) => createSlideHTML(data)).join('');
-                slides = document.querySelectorAll('.slide');
-                slides.forEach((slide, index) => slide.dataset.index = index);
-            }
+  <hr />
+  <h3>Notes for a real report</h3>
+  <ul>
+    <li>Include screenshots showing before/after on real third-party sites using widget code.</li>
+    <li>List exact endpoints that still resolve by username (widget href, pidgets, REST v5, image URLs, conversions endpoints).</li>
+    <li>Show automation that detects released usernames and reclaims them to demonstrate ease of exploitation.</li>
+  </ul>
 
-            function showSlide(index, direction = 'forward') {
-                const oldSlide = container.querySelector('.slide.active');
-                if (oldSlide) {
-                   oldSlide.classList.remove('active');
-                   oldSlide.classList.add(direction === 'forward' ? 'exit-right' : 'exit-left');
-                }
-                
-                currentSlide = index;
-                const newSlide = slides[currentSlide];
-                
-                newSlide.classList.remove('exit-left', 'exit-right');
-                setTimeout(() => newSlide.classList.add('active'), 50);
+  <script>
+    // === Simulated backend data ===
+    const store = {
+      // initial owner: victim
+      'victim_profile': {
+        username: 'oldusername', // initial username used in embeds
+        display_name: 'Famous Brand (victim)',
+        pins: [
+          {id:'pin-1', title:'Product A', img:'https://via.placeholder.com/160x100?text=Brand-A'},
+          {id:'pin-2', title:'Product B', img:'https://via.placeholder.com/160x100?text=Brand-B'},
+        ]
+      },
+      // after user changes username (victim moves to newname)
+      'victim_new': {
+        username: 'newname',
+        display_name: 'Famous Brand (victim)',
+        pins: [
+          {id:'pin-3', title:'New-Product X', img:'https://via.placeholder.com/160x100?text=Brand-New-X'}
+        ]
+      },
+      // attacker claims the old username later
+      'attacker': {
+        username: 'oldusername',
+        display_name: 'Evil Actor',
+        pins: [
+          {id:'evil-1', title:'Malicious Link', img:'https://via.placeholder.com/160x100?text=Evil'},
+          {id:'evil-2', title:'NSFW', img:'https://via.placeholder.com/160x100?text=NSFW'}
+        ]
+      }
+    };
 
-                updateUI();
-            }
+    // Current mapping used by the 'live' Pinterest service simulation
+    let liveUsernameMap = {
+      // maps profile-id -> current username owner
+      profile_for_site: 'victim_profile' // initially points to victim_profile which has username 'oldusername'
+    };
 
-            function updateUI() {
-                const progress = ((currentSlide + 1) / slides.length) * 100;
-                progressBar.style.width = `${progress}%`;
-            }
-            
-            function next() {
-                 if (currentSlide < slides.length - 1) showSlide(currentSlide + 1, 'forward');
-            }
-            
-            function prev() {
-                 if (currentSlide > 0) showSlide(currentSlide - 1, 'backward');
-            }
+    // Utility: render widget-like card based on the href value
+    function renderWidget(hrefUsername) {
+      const container = document.getElementById('widget-embed');
+      container.innerHTML = '';
+      // who currently owns that username in our simulated service?
+      const owner = findOwnerByUsername(hrefUsername);
+      if(!owner) {
+        container.innerHTML = '<div class="muted">No content (username not found)</div>';
+        return;
+      }
+      const h = document.createElement('div');
+      h.innerHTML = '<strong>'+owner.display_name+'</strong> &middot; @'+owner.username+'<div style="display:flex;gap:8px;margin-top:8px"></div>';
+      const grid = h.querySelector('div');
+      owner.pins.forEach(p=>{
+        const tile = document.createElement('div');
+        tile.style.width='120px';tile.style.fontSize='13px';tile.style.textAlign='center';
+        tile.innerHTML = `<img src="${p.img}" width="120" height="70" style="border-radius:6px;display:block;margin:0 auto 6px"/><div>${escapeHtml(p.title)}</div>`;
+        grid.appendChild(tile);
+      });
+      container.appendChild(h);
+    }
 
-            document.addEventListener('click', (e) => {
-                if (e.clientX > window.innerWidth / 2) {
-                    next();
-                } else {
-                    prev();
-                }
-            });
+    // Simulate calling /v3/pidgets/users/[username]/pins/
+    function fetchPidgets(username) {
+      const el = document.getElementById('pidgets-json');
+      const owner = findOwnerByUsername(username);
+      if(!owner){
+        el.textContent = JSON.stringify({error:'not found'},null,2);
+        document.getElementById('pidgets-embed').innerHTML = '<div class="muted">No pins</div>';
+        return;
+      }
+      const json = {
+        username: owner.username,
+        pins: owner.pins.map(p=>({id:p.id,title:p.title,image:p.img}))
+      };
+      el.textContent = JSON.stringify(json,null,2);
+      // render
+      const container = document.getElementById('pidgets-embed');
+      container.innerHTML='';
+      json.pins.forEach(p=>{
+        const d = document.createElement('div');
+        d.style.display='flex';d.style.gap='8px';d.style.marginBottom='8px';
+        d.innerHTML = `<img src="${p.image}" width="90" height="60" style="border-radius:6px"/><div><strong>${escapeHtml(p.title)}</strong><br/><small class="gray">@${escapeHtml(json.username)}</small></div>`;
+        container.appendChild(d);
+      });
+    }
 
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'ArrowRight') next();
-                if (e.key === 'ArrowLeft') prev();
-            });
+    // Simulate /v5/user_account?username=...
+    function fetchRestUser(username){
+      const el = document.getElementById('rest-json');
+      const owner = findOwnerByUsername(username);
+      if(!owner){ el.textContent = JSON.stringify({error:'not found'},null,2); document.getElementById('rest-embed').innerHTML=''; return; }
+      const json = {username: owner.username, display_name: owner.display_name, pins_count: owner.pins.length};
+      el.textContent = JSON.stringify(json,null,2);
+      document.getElementById('rest-embed').innerHTML = `<div><strong>${escapeHtml(json.display_name)}</strong> &middot; @${escapeHtml(json.username)}<div class="muted">pins: ${json.pins_count}</div></div>`;
+    }
 
-            renderSlides();
-            setTimeout(() => showSlide(0), 100);
-        });
-    </script>
+    // Render static image block by looking up owner's pins and loading their images
+    function renderImages(username){
+      const container = document.getElementById('image-embed');
+      container.innerHTML='';
+      const owner = findOwnerByUsername(username);
+      if(!owner){ container.innerHTML='<div class="muted">No images (username not found)</div>'; return; }
+      owner.pins.forEach(p=>{
+        const img = document.createElement('img'); img.src=p.img; img.width=140; img.height=90; img.style.borderRadius='6px'; img.alt=p.title; container.appendChild(img);
+      });
+    }
+
+    function findOwnerByUsername(username){
+      // search store for matching username
+      const keys = Object.keys(store);
+      for(const k of keys){ if(store[k].username === username) return store[k]; }
+      return null;
+    }
+
+    function escapeHtml(s){ return (s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    // Initial href (site author hardcoded this when they dropped the widget)
+    const hardcodedHref = 'oldusername';
+
+    function renderAll(){
+      // widget uses the hardcoded href
+      renderWidget(hardcodedHref);
+      // pidgets fetch
+      fetchPidgets(hardcodedHref);
+      // rest api
+      fetchRestUser(hardcodedHref);
+      // images
+      renderImages(hardcodedHref);
+
+      // also update the snippet text to show how the embed's href remains constant even after user changes
+      document.getElementById('widget-snippet').textContent = `<a data-pin-do="embedUser" href="https://www.pinterest.com/${hardcodedHref}/"></a> <script src="//assets.pinterest.com/js/pinit.js"></script>`;
+    }
+
+    // === Actions to simulate timeline events ===
+    document.getElementById('btn-change').addEventListener('click', ()=>{
+      // simulate user changing username: we create mapping where the profile_for_site now points to victim_new, and victim_new has username 'newname'
+      liveUsernameMap.profile_for_site = 'victim_new';
+      alert('Simulated: victim changed username FROM oldusername TO newname.\n\nNote: the site still has the old username hardcoded; live service now maps oldusername -> ??? (unclaimed)');
+
+      // In many services, the username "oldusername" would either be left free or pointers would redirect
+      // For our simulation, we remove oldusername from owner records to indicate it is free now.
+      store['victim_profile'].username = null; // old handle freed
+      renderAll();
+    });
+
+    document.getElementById('btn-register').addEventListener('click', ()=>{
+      // simulate attacker registering the old username
+      // we set attacker.username to 'oldusername' and that makes findOwnerByUsername('oldusername') return attacker.
+      store['attacker'].username = 'oldusername';
+      // NOTE: in the real world, Pinterest's live mapping would now return attacker content for the old username.
+      alert('Simulated: Attacker has registered oldusername. Now any embed or API call that uses the literal username oldusername will return attacker content.');
+      renderAll();
+    });
+
+    document.getElementById('btn-reset').addEventListener('click', ()=>{
+      // restore initial state
+      store['victim_profile'].username = 'oldusername';
+      store['victim_profile'].display_name = 'Famous Brand (victim)';
+      store['victim_profile'].pins = [
+        {id:'pin-1', title:'Product A', img:'https://via.placeholder.com/160x100?text=Brand-A'},
+        {id:'pin-2', title:'Product B', img:'https://via.placeholder.com/160x100?text=Brand-B'}
+      ];
+      store['victim_new'].username = 'newname';
+      store['attacker'].username = null;
+      liveUsernameMap.profile_for_site = 'victim_profile';
+      renderAll();
+    });
+
+    // initialize
+    renderAll();
+  </script>
 </body>
 </html>
