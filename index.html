@@ -3,237 +3,201 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Pinterest Username-Reuse Demo (Simulated)</title>
+  <title>Pinterest Username-Reuse Demo (Working, Single File)</title>
   <style>
-    body{font-family:Inter,ui-sans-serif,system-ui,Arial;margin:24px;background:#f6f8fb;color:#0b1220}
-    h1{font-size:20px}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-    .card{background:white;border-radius:10px;padding:12px;box-shadow:0 6px 18px rgba(11,18,32,0.06)}
-    .embed{border:1px dashed #d6dbe6;padding:10px;border-radius:8px;min-height:100px}
-    .controls{margin-bottom:12px}
-    button{padding:8px 12px;border-radius:8px;border:0;background:#2563eb;color:white;cursor:pointer;margin-right:8px}
-    small.gray{color:#6b7280}
+    :root{--bg:#f6f8fb;--card:#ffffff;--muted:#6b7280;--brand:#2563eb}
+    body{font-family:Inter,system-ui,Arial;margin:20px;background:var(--bg);color:#0b1220}
+    h1{font-size:20px;margin:0 0 8px}
+    .lead{margin:0 0 18px;color:var(--muted)}
+    .controls{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+    button{padding:8px 12px;border-radius:8px;border:0;background:var(--brand);color:white;cursor:pointer}
+    button.ghost{background:transparent;border:1px solid #d1d5db;color:#0b1220}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+    .card{background:var(--card);border-radius:10px;padding:12px;box-shadow:0 6px 18px rgba(11,18,32,0.06)}
+    .embed{border:1px dashed #e6eefc;padding:10px;border-radius:8px;min-height:120px}
     pre{background:#0b122028;padding:10px;border-radius:6px;overflow:auto}
-    .muted{color:#6b7280;font-size:13px}
+    .muted{color:var(--muted);font-size:13px}
+    footer{margin-top:18px;color:var(--muted);font-size:13px}
+    .hint{font-size:13px;color:#0f172a}
   </style>
 </head>
 <body>
-  <h1>Pinterest Username-Reuse Vulnerability — Interactive Demo (Simulated)</h1>
-  <p class="muted">This is a <strong>local simulation</strong> — it does <em>not</em> call Pinterest. It demonstrates how embeds and API calls which reference usernames can be silently redirected if an old username is re-registered by an attacker.</p>
+  <h1>Pinterest Username-Reuse Demo — Working Single File</h1>
+  <p class="lead">A fully self-contained simulation that demonstrates how hardcoded username-based embeds / endpoints can be redirected if an old username is reclaimed. This file is safe to host — it does <strong>not</strong> call Pinterest.</p>
 
   <div class="controls">
-    <button id="btn-change">Simulate: User changes username (old &rarr; new)</button>
+    <button id="auto-play">Auto-play Timeline (3 steps)</button>
+    <button id="btn-change">Simulate: User changes username</button>
     <button id="btn-register">Simulate: Attacker registers old username</button>
-    <button id="btn-reset">Reset demo</button>
+    <button id="btn-reset" class="ghost">Reset</button>
+    <button id="btn-screencap" class="ghost">Prepare for Screencap (focus)</button>
   </div>
 
   <div class="grid">
     <div class="card">
-      <h3>1) Widget embed (HTML + pinit.js style)</h3>
-      <div class="embed" id="widget-embed">
-        <!-- This area shows what the official widget would render based on the username in the href -->
-      </div>
+      <h3>1) Widget Embed (HTML snippet)</h3>
+      <div class="embed" id="widget-embed" aria-live="polite"></div>
       <p class="muted">HTML snippet used by site (hardcoded):</p>
-      <pre id="widget-snippet">&lt;a data-pin-do="embedUser" href="https://www.pinterest.com/oldusername/"&gt;&lt;/a&gt; &lt;script src="//assets.pinterest.com/js/pinit.js"&gt;&lt;/script&gt;</pre>
+      <pre id="widget-snippet"></pre>
     </div>
 
     <div class="card">
-      <h3>2) "Pidgets" JSON endpoint (simulated)</h3>
+      <h3>2) Pidgets JSON Feed (simulated)</h3>
       <div class="embed" id="pidgets-embed"></div>
-      <p class="muted">Example endpoint: <code>/v3/pidgets/users/[username]/pins/</code></p>
-      <p class="muted">Fetched JSON (simulated):</p>
+      <p class="muted">Endpoint: <code>/v3/pidgets/users/[username]/pins/</code></p>
       <pre id="pidgets-json"></pre>
     </div>
 
     <div class="card">
-      <h3>3) REST API (v5) for account info (simulated)</h3>
+      <h3>3) REST API /v5/user_account (simulated)</h3>
       <div class="embed" id="rest-embed"></div>
-      <p class="muted">Endpoint example: <code>/v5/user_account?username=[username]</code></p>
+      <p class="muted">Endpoint: <code>/v5/user_account?username=[username]</code></p>
       <pre id="rest-json"></pre>
     </div>
 
     <div class="card">
-      <h3>4) Direct image URL / static assets</h3>
-      <div class="embed" id="image-embed" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start"></div>
-      <p class="muted">Example image URL pattern: <code>i.pinimg.com/originals/.../[image].jpg</code></p>
+      <h3>4) Direct Image Assets</h3>
+      <div class="embed" id="image-embed" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+      <p class="muted">Example static assets: <code>i.pinimg.com/originals/.../[image].jpg</code></p>
     </div>
   </div>
 
-  <hr />
-  <h3>Notes for a real report</h3>
-  <ul>
-    <li>Include screenshots showing before/after on real third-party sites using widget code.</li>
-    <li>List exact endpoints that still resolve by username (widget href, pidgets, REST v5, image URLs, conversions endpoints).</li>
-    <li>Show automation that detects released usernames and reclaims them to demonstrate ease of exploitation.</li>
-  </ul>
+  <footer>
+    <div class="hint">Host this file on any static webhost (GitHub Pages / Netlify / your server). Use the <strong>Auto-play Timeline</strong> button to record the before/after sequence for a PoC video.</div>
+  </footer>
 
   <script>
-    // === Simulated backend data ===
+    // ------------------ Simulated data (change as you like) ------------------
     const store = {
-      // initial owner: victim
       'victim_profile': {
-        username: 'oldusername', // initial username used in embeds
+        username: 'oldusername',
         display_name: 'Famous Brand (victim)',
         pins: [
-          {id:'pin-1', title:'Product A', img:'https://via.placeholder.com/160x100?text=Brand-A'},
-          {id:'pin-2', title:'Product B', img:'https://via.placeholder.com/160x100?text=Brand-B'},
+          {id:'pin-1', title:'Product A', img:'https://via.placeholder.com/280x160?text=Brand+A'},
+          {id:'pin-2', title:'Product B', img:'https://via.placeholder.com/280x160?text=Brand+B'}
         ]
       },
-      // after user changes username (victim moves to newname)
       'victim_new': {
         username: 'newname',
         display_name: 'Famous Brand (victim)',
-        pins: [
-          {id:'pin-3', title:'New-Product X', img:'https://via.placeholder.com/160x100?text=Brand-New-X'}
-        ]
+        pins: [ {id:'pin-3', title:'New Product X', img:'https://via.placeholder.com/280x160?text=Brand+New+X'} ]
       },
-      // attacker claims the old username later
       'attacker': {
-        username: 'oldusername',
+        username: null,
         display_name: 'Evil Actor',
         pins: [
-          {id:'evil-1', title:'Malicious Link', img:'https://via.placeholder.com/160x100?text=Evil'},
-          {id:'evil-2', title:'NSFW', img:'https://via.placeholder.com/160x100?text=NSFW'}
+          {id:'evil-1', title:'Malicious Link', img:'https://via.placeholder.com/280x160?text=Evil'},
+          {id:'evil-2', title:'NSFW Content', img:'https://via.placeholder.com/280x160?text=NSFW'}
         ]
       }
     };
 
-    // Current mapping used by the 'live' Pinterest service simulation
-    let liveUsernameMap = {
-      // maps profile-id -> current username owner
-      profile_for_site: 'victim_profile' // initially points to victim_profile which has username 'oldusername'
-    };
-
-    // Utility: render widget-like card based on the href value
-    function renderWidget(hrefUsername) {
-      const container = document.getElementById('widget-embed');
-      container.innerHTML = '';
-      // who currently owns that username in our simulated service?
-      const owner = findOwnerByUsername(hrefUsername);
-      if(!owner) {
-        container.innerHTML = '<div class="muted">No content (username not found)</div>';
-        return;
-      }
-      const h = document.createElement('div');
-      h.innerHTML = '<strong>'+owner.display_name+'</strong> &middot; @'+owner.username+'<div style="display:flex;gap:8px;margin-top:8px"></div>';
-      const grid = h.querySelector('div');
-      owner.pins.forEach(p=>{
-        const tile = document.createElement('div');
-        tile.style.width='120px';tile.style.fontSize='13px';tile.style.textAlign='center';
-        tile.innerHTML = `<img src="${p.img}" width="120" height="70" style="border-radius:6px;display:block;margin:0 auto 6px"/><div>${escapeHtml(p.title)}</div>`;
-        grid.appendChild(tile);
-      });
-      container.appendChild(h);
-    }
-
-    // Simulate calling /v3/pidgets/users/[username]/pins/
-    function fetchPidgets(username) {
-      const el = document.getElementById('pidgets-json');
-      const owner = findOwnerByUsername(username);
-      if(!owner){
-        el.textContent = JSON.stringify({error:'not found'},null,2);
-        document.getElementById('pidgets-embed').innerHTML = '<div class="muted">No pins</div>';
-        return;
-      }
-      const json = {
-        username: owner.username,
-        pins: owner.pins.map(p=>({id:p.id,title:p.title,image:p.img}))
-      };
-      el.textContent = JSON.stringify(json,null,2);
-      // render
-      const container = document.getElementById('pidgets-embed');
-      container.innerHTML='';
-      json.pins.forEach(p=>{
-        const d = document.createElement('div');
-        d.style.display='flex';d.style.gap='8px';d.style.marginBottom='8px';
-        d.innerHTML = `<img src="${p.image}" width="90" height="60" style="border-radius:6px"/><div><strong>${escapeHtml(p.title)}</strong><br/><small class="gray">@${escapeHtml(json.username)}</small></div>`;
-        container.appendChild(d);
-      });
-    }
-
-    // Simulate /v5/user_account?username=...
-    function fetchRestUser(username){
-      const el = document.getElementById('rest-json');
-      const owner = findOwnerByUsername(username);
-      if(!owner){ el.textContent = JSON.stringify({error:'not found'},null,2); document.getElementById('rest-embed').innerHTML=''; return; }
-      const json = {username: owner.username, display_name: owner.display_name, pins_count: owner.pins.length};
-      el.textContent = JSON.stringify(json,null,2);
-      document.getElementById('rest-embed').innerHTML = `<div><strong>${escapeHtml(json.display_name)}</strong> &middot; @${escapeHtml(json.username)}<div class="muted">pins: ${json.pins_count}</div></div>`;
-    }
-
-    // Render static image block by looking up owner's pins and loading their images
-    function renderImages(username){
-      const container = document.getElementById('image-embed');
-      container.innerHTML='';
-      const owner = findOwnerByUsername(username);
-      if(!owner){ container.innerHTML='<div class="muted">No images (username not found)</div>'; return; }
-      owner.pins.forEach(p=>{
-        const img = document.createElement('img'); img.src=p.img; img.width=140; img.height=90; img.style.borderRadius='6px'; img.alt=p.title; container.appendChild(img);
-      });
-    }
+    // Hardcoded by-site value that a webmaster pasted into their HTML originally
+    const hardcodedHref = 'oldusername';
 
     function findOwnerByUsername(username){
-      // search store for matching username
-      const keys = Object.keys(store);
-      for(const k of keys){ if(store[k].username === username) return store[k]; }
+      if(!username) return null;
+      for(const k of Object.keys(store)){
+        if(store[k].username === username) return store[k];
+      }
       return null;
     }
 
-    function escapeHtml(s){ return (s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-    // Initial href (site author hardcoded this when they dropped the widget)
-    const hardcodedHref = 'oldusername';
+    function renderWidget(hrefUsername){
+      const container = document.getElementById('widget-embed'); container.innerHTML='';
+      const owner = findOwnerByUsername(hrefUsername);
+      if(!owner){ container.innerHTML = '<div class="muted">No content — username unclaimed</div>'; return; }
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = `<strong>${escapeHtml(owner.display_name)}</strong> · @${escapeHtml(owner.username)}<div style="display:flex;gap:8px;margin-top:10px"></div>`;
+      const grid = wrapper.querySelector('div');
+      owner.pins.forEach(p=>{
+        const tile = document.createElement('div'); tile.style.width='140px'; tile.style.fontSize='13px'; tile.style.textAlign='center';
+        tile.innerHTML = `<img src="${p.img}" width="140" height="80" style="border-radius:6px;display:block;margin:0 auto 6px"/><div>${escapeHtml(p.title)}</div>`;
+        grid.appendChild(tile);
+      });
+      container.appendChild(wrapper);
+    }
+
+    function fetchPidgets(username){
+      const el = document.getElementById('pidgets-json');
+      const owner = findOwnerByUsername(username);
+      if(!owner){ el.textContent = JSON.stringify({error:'not_found'},null,2); document.getElementById('pidgets-embed').innerHTML='<div class="muted">No pins</div>'; return; }
+      const json = {username: owner.username, pins: owner.pins.map(p=>({id:p.id,title:p.title,image:p.img}))};
+      el.textContent = JSON.stringify(json,null,2);
+      const container = document.getElementById('pidgets-embed'); container.innerHTML='';
+      json.pins.forEach(p=>{
+        const row = document.createElement('div'); row.style.display='flex'; row.style.gap='10px'; row.style.marginBottom='8px';
+        row.innerHTML = `<img src="${p.image}" width="100" height="66" style="border-radius:6px"/><div><strong>${escapeHtml(p.title)}</strong><br/><small class="muted">@${escapeHtml(json.username)}</small></div>`;
+        container.appendChild(row);
+      });
+    }
+
+    function fetchRestUser(username){
+      const el = document.getElementById('rest-json');
+      const owner = findOwnerByUsername(username);
+      if(!owner){ el.textContent = JSON.stringify({error:'not_found'},null,2); document.getElementById('rest-embed').innerHTML=''; return; }
+      const json = {username: owner.username, display_name: owner.display_name, pins_count: owner.pins.length};
+      el.textContent = JSON.stringify(json,null,2);
+      document.getElementById('rest-embed').innerHTML = `<div><strong>${escapeHtml(json.display_name)}</strong> · @${escapeHtml(json.username)}<div class="muted">pins: ${json.pins_count}</div></div>`;
+    }
+
+    function renderImages(username){
+      const container = document.getElementById('image-embed'); container.innerHTML='';
+      const owner = findOwnerByUsername(username);
+      if(!owner){ container.innerHTML = '<div class="muted">No images — username unclaimed</div>'; return; }
+      owner.pins.forEach(p=>{ const img=document.createElement('img'); img.src=p.img; img.width=180; img.height=108; img.style.borderRadius='6px'; img.alt=p.title; container.appendChild(img); });
+    }
 
     function renderAll(){
-      // widget uses the hardcoded href
       renderWidget(hardcodedHref);
-      // pidgets fetch
       fetchPidgets(hardcodedHref);
-      // rest api
       fetchRestUser(hardcodedHref);
-      // images
       renderImages(hardcodedHref);
-
-      // also update the snippet text to show how the embed's href remains constant even after user changes
       document.getElementById('widget-snippet').textContent = `<a data-pin-do="embedUser" href="https://www.pinterest.com/${hardcodedHref}/"></a> <script src="//assets.pinterest.com/js/pinit.js"></script>`;
     }
 
-    // === Actions to simulate timeline events ===
+    // Timeline actions
     document.getElementById('btn-change').addEventListener('click', ()=>{
-      // simulate user changing username: we create mapping where the profile_for_site now points to victim_new, and victim_new has username 'newname'
-      liveUsernameMap.profile_for_site = 'victim_new';
-      alert('Simulated: victim changed username FROM oldusername TO newname.\n\nNote: the site still has the old username hardcoded; live service now maps oldusername -> ??? (unclaimed)');
-
-      // In many services, the username "oldusername" would either be left free or pointers would redirect
-      // For our simulation, we remove oldusername from owner records to indicate it is free now.
-      store['victim_profile'].username = null; // old handle freed
+      // victim moves to a new username; old username becomes unclaimed
+      store['victim_profile'].username = null;
+      store['victim_new'].username = 'newname';
+      alert('Simulated: Victim changed username FROM oldusername TO newname. The site still uses the oldusername in its embed.');
       renderAll();
     });
 
     document.getElementById('btn-register').addEventListener('click', ()=>{
-      // simulate attacker registering the old username
-      // we set attacker.username to 'oldusername' and that makes findOwnerByUsername('oldusername') return attacker.
+      // attacker registers oldusername
       store['attacker'].username = 'oldusername';
-      // NOTE: in the real world, Pinterest's live mapping would now return attacker content for the old username.
-      alert('Simulated: Attacker has registered oldusername. Now any embed or API call that uses the literal username oldusername will return attacker content.');
+      alert('Simulated: Attacker registered oldusername. Any embed or API that uses oldusername now returns attacker content.');
       renderAll();
     });
 
     document.getElementById('btn-reset').addEventListener('click', ()=>{
-      // restore initial state
       store['victim_profile'].username = 'oldusername';
-      store['victim_profile'].display_name = 'Famous Brand (victim)';
-      store['victim_profile'].pins = [
-        {id:'pin-1', title:'Product A', img:'https://via.placeholder.com/160x100?text=Brand-A'},
-        {id:'pin-2', title:'Product B', img:'https://via.placeholder.com/160x100?text=Brand-B'}
-      ];
       store['victim_new'].username = 'newname';
       store['attacker'].username = null;
-      liveUsernameMap.profile_for_site = 'victim_profile';
       renderAll();
     });
 
-    // initialize
+    // Auto-play timeline for quick screencap/report
+    document.getElementById('auto-play').addEventListener('click', async ()=>{
+      const btns = [document.getElementById('btn-change'), document.getElementById('btn-register')];
+      document.getElementById('auto-play').disabled = true;
+      for(const b of btns){ b.click(); await new Promise(r=>setTimeout(r,900)); }
+      document.getElementById('auto-play').disabled = false;
+    });
+
+    // Screencap focus prepares the page for recording: enlarges embed area briefly
+    document.getElementById('btn-screencap').addEventListener('click', ()=>{
+      const cards = document.querySelectorAll('.card');
+      cards.forEach(c=>c.style.transform='scale(1.01)');
+      setTimeout(()=>cards.forEach(c=>c.style.transform=''),800);
+      alert('Ready for screencap: use Auto-play then record your screen to produce PoC video frames.');
+    });
+
+    // initialize on load
     renderAll();
   </script>
 </body>
