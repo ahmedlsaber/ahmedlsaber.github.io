@@ -20,12 +20,38 @@
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
     }
-    html, body { background: var(--bg); color: var(--text); font-family: var(--sans); }
-    .wrap { max-width: 1100px; margin: 32px auto; padding: 0 16px; }
+    html, body { 
+      background: var(--bg); 
+      color: var(--text); 
+      font-family: var(--sans);
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    .wrap { 
+      max-width: 1100px; 
+      margin: 32px auto; 
+      padding: 0 16px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
     h1 { font-size: 28px; margin: 0 0 6px; }
     p.subtitle { margin: 0 0 18px; color: var(--muted); }
-    .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; align-items: start; }
-    .card { background: var(--card); border: 1px solid #1f2937; border-radius: 16px; padding: 16px; box-shadow: 0 8px 18px rgba(0,0,0,0.25); }
+    .main-content {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 16px;
+      flex: 1;
+    }
+    .card { 
+      background: var(--card); 
+      border: 1px solid #1f2937; 
+      border-radius: 16px; 
+      padding: 16px; 
+      box-shadow: 0 8px 18px rgba(0,0,0,0.25); 
+      margin-bottom: 16px;
+    }
     .card h2 { margin: 0 0 12px; font-size: 18px; }
     .row { display:flex; flex-wrap: wrap; gap: 8px; align-items:center }
     .row > * { margin-right: 8px }
@@ -52,11 +78,24 @@
     .pin .cap { padding:8px; font-size:12px; color:#9fb3c8 }
     .foot { margin-top:26px; color:var(--muted); font-size:12px }
     a.inline { color:#93c5fd }
-    .scroll { max-height: 520px; overflow:auto; }
-    .sticky { 
+    .scroll { max-height: 400px; overflow-y: auto; padding-right: 8px; }
+    .sticky-sidebar {
       position: sticky;
-      top: 12px;
-      height: calc(100vh - 60px);
+      top: 20px;
+      height: fit-content;
+      max-height: calc(100vh - 100px);
+      overflow-y: auto;
+    }
+    .api-section {
+      grid-column: span 12;
+      margin-top: 16px;
+    }
+    .json-output {
+      background:#0b1220; 
+      border:1px solid #1e293b; 
+      border-radius:12px; 
+      padding:12px;
+      max-height: 400px;
       overflow-y: auto;
     }
   </style>
@@ -66,9 +105,9 @@
     <h1>Pinterest Username Takeover PoC</h1>
     <p class="subtitle">GitHub Pages, no server. Demonstrates <em>pidgets</em> JSON + official <em>embeds</em> and a drift detector when a freed username is re-claimed by an attacker/test user.</p>
 
-    <div class="grid">
+    <div class="main-content">
       <!-- Left column: controls & status -->
-      <div class="card sticky" style="grid-column: span 5">
+      <div class="card sticky-sidebar" style="grid-column: span 5">
         <h2>1) Configuration</h2>
         <div class="kv"><div>OLD username (public):</div><div><span id="oldUser" class="pill"></span></div></div>
         <div class="kv"><div>NEW username (renamed):</div><div><span id="newUser" class="pill"></span></div></div>
@@ -77,13 +116,13 @@
         <p class="muted">Override via query params: <span class="kbd">?user=&lt;old&gt;&amp;new=&lt;new&gt;&amp;board=&lt;board&gt;&amp;section=&lt;section&gt;</span></p>
 
         <h2>2) Detector</h2>
-        <div id="detectorBanner" class="banner warn">No baseline yet. Capture baseline from OLD username to begin.</div>
+        <div id="detectorBanner" class="banner ok">Baseline exists. Click "Check now" to validate current resolution.</div>
         <div class="row" style="margin-bottom: 8px">
           <button id="btnBaseline" class="btn ghost">Capture baseline from OLD</button>
           <button id="btnCheck" class="btn">Check now</button>
           <button id="btnClear" class="btn small ghost">Clear baseline</button>
         </div>
-        <div class="kv"><div>Baseline user.id:</div><div class="mono" id="baselineOut">—</div></div>
+        <div class="kv"><div>Baseline user.id:</div><div class="mono" id="baselineOut">620793267294033314</div></div>
         <div class="kv"><div>Current resolved user.id:</div><div class="mono" id="currentOut">—</div></div>
 
         <h2>3) Target switch</h2>
@@ -108,7 +147,7 @@
       </div>
 
       <!-- Bottom section: APIs -->
-      <div class="card" style="grid-column: span 12">
+      <div class="card api-section">
         <h2>Pidgets JSON (read-only) — live renders</h2>
         <div class="row" style="margin-bottom: 6px">
           <button id="btnFetchUserPins" class="btn small">Fetch <span class="mono">/v3/pidgets/users/{user}/pins/</span></button>
@@ -118,14 +157,37 @@
         <div class="row">
           <span id="apiStatus" class="badge warn">Idle</span>
         </div>
-        <div class="grid" style="margin-top: 12px">
-          <div class="scroll" style="grid-column: span 6">
+        <div class="grid" style="margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div>
             <h3>Pins grid</h3>
             <div id="pins" class="pins"></div>
           </div>
-          <div class="scroll" style="grid-column: span 6">
+          <div>
             <h3>Last JSON (truncated)</h3>
-            <pre id="jsonOut" style="white-space: pre-wrap; font-family: var(--mono); background:#0b1220; border:1px solid #1e293b; border-radius:12px; padding:12px;"></pre>
+            <pre id="jsonOut" class="json-output">{
+  "status": "success",
+  "code": 0,
+  "message": "dai_~",
+  "endpoint_name": "v3_pidget_get_board_section_pins",
+  "data": {
+    "section": {
+      "id": "5447171508724100692",
+      "title": "pickmese"
+    },
+    "board": {
+      "name": "pickme",
+      "follower_count": 0,
+      "description": "",
+      "image_thumbnail_url": "https://i.pining.com/upload/620793198576042125_board_thu08-17-00-00-40_70551_60.jpg",
+      "url": "/victim_in_pinterest/pickme/",
+      "id": "620793198576042125",
+      "pin_count": 7
+    },
+    "user": {
+      "follower_count": 0
+    }
+  }
+}</pre>
           </div>
         </div>
       </div>
