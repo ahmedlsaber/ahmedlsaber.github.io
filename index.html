@@ -56,7 +56,7 @@
     .sticky { 
       position: sticky;
       top: 12px;
-      height: calc(100vh - 60px); /* Fix for scrolling issue */
+      height: calc(100vh - 60px);
       overflow-y: auto;
     }
   </style>
@@ -107,12 +107,13 @@
         </div>
       </div>
 
+      <!-- Bottom section: APIs -->
       <div class="card" style="grid-column: span 12">
         <h2>Pidgets JSON (read-only) — live renders</h2>
         <div class="row" style="margin-bottom: 6px">
           <button id="btnFetchUserPins" class="btn small">Fetch <span class="mono">/v3/pidgets/users/{user}/pins/</span></button>
           <button id="btnFetchBoardPins" class="btn small">Fetch <span class="mono">/v3/pidgets/boards/{user}/{board}/pins/</span></button>
-          <button id="btnFetchSectionPins" class="btn small">Fetch <span class="mono">/v3/pidgets/boards/{user}/{board}/sections/{section}/pins/</span></button>
+          <button id="btnFetchSectionPins" class="btn small">Fetch <span class="mono">/v3/pidgets/sections/{user}/{board}/{section}/pins/</span></button>
         </div>
         <div class="row">
           <span id="apiStatus" class="badge warn">Idle</span>
@@ -238,8 +239,8 @@
     }
 
     async function getSectionPins(username, board, section) {
-      const url = `https://api.pinterest.com/v3/pidgets/boards/${encodeURIComponent(username)}/${encodeURIComponent(board)}/sections/${encodeURIComponent(section)}/pins/`;
-      setApiStatus('warn', `Fetching boards/${username}/${board}/sections/${section}/pins…`);
+      const url = `https://api.pinterest.com/v3/pidgets/sections/${encodeURIComponent(username)}/${encodeURIComponent(board)}/${encodeURIComponent(section)}/pins/`;
+      setApiStatus('warn', `Fetching sections/${username}/${board}/${section}/pins…`);
       const json = await fetchJSON(url);
       setApiStatus('ok', 'OK');
       return json;
