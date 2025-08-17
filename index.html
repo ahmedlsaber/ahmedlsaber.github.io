@@ -232,9 +232,9 @@
       return json;
     }
 
-    async function getSectionPins(username, section) {
-      const url = `https://api.pinterest.com/v3/pidgets/sections/${encodeURIComponent(username)}/${encodeURIComponent(section)}/pins/`;
-      setApiStatus('warn', `Fetching sections/${username}/${section}/pins…`);
+    async function getSectionPins(username, board, section) {
+      const url = `https://api.pinterest.com/v3/pidgets/sections/${encodeURIComponent(username)}/${encodeURIComponent(board)}/${encodeURIComponent(section)}/pins/`;
+      setApiStatus('warn', `Fetching sections/${username}/${board}/${section}/pins…`);
       const json = await fetchJSON(url);
       setApiStatus('ok', 'OK');
       return json;
